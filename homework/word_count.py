@@ -4,125 +4,126 @@
 
 import fileinput
 import glob
-import os.path
+import os
+import shutil
 import time
 from itertools import groupby
 
 
-#
-# Escriba la funcion que  genere n copias de los archivos de texto en la
-# carpeta files/raw en la carpeta files/input. El nombre de los archivos
-# generados debe ser el mismo que el de los archivos originales, pero con
-# un sufijo que indique el número de copia. Por ejemplo, si el archivo
-# original se llama text0.txt, el archivo generado se llamará text0_1.txt,
-# text0_2.txt, etc.
-#
 def copy_raw_files_to_input_folder(n):
-    """Funcion copy_files"""
+    """
+    Genera n copias de los archivos .txt en files/raw y las guarda en files/input
+    con sufijos numerados.
+    """
+    input_dir = "files/raw"
+    output_dir = "files/input"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for filepath in glob.glob(os.path.join(input_dir, "*.txt")):
+        filename = os.path.basename(filepath)
+        with open(filepath, "r", encoding="utf-8") as file:
+            content = file.read()
+        for i in range(1, n + 1):
+            new_filename = f"{os.path.splitext(filename)[0]}_{i}.txt"
+            new_filepath = os.path.join(output_dir, new_filename)
+            with open(new_filepath, "w", encoding="utf-8") as new_file:
+                new_file.write(content)
 
 
-#
-# Escriba la función load_input que recive como parámetro un folder y retorna
-# una lista de tuplas donde el primer elemento de cada tupla es el nombre del
-# archivo y el segundo es una línea del archivo. La función convierte a tuplas
-# todas las lineas de cada uno de los archivos. La función es genérica y debe
-# leer todos los archivos de folder entregado como parámetro.
-#
-# Por ejemplo:
-#   [
-#     ('text0'.txt', 'Analytics is the discovery, inter ...'),
-#     ('text0'.txt', 'in data. Especially valuable in ar...').
-#     ...
-#     ('text2.txt'. 'hypotheses.')
-#   ]
-#
 def load_input(input_directory):
-    """Funcion load_input"""
+    """
+    Lee todos los archivos de una carpeta y retorna una lista de tuplas
+    (nombre_archivo, línea).
+    """
+    result = []
+    for filepath in glob.glob(os.path.join(input_directory, "*.txt")):
+        filename = os.path.basename(filepath)
+        with open(filepath, "r", encoding="utf-8") as file:
+            for line in file:
+                line = line.strip()
+                if line:
+                    result.append((filename, line))
+    return result
 
 
-#
-# Escriba la función line_preprocessing que recibe una lista de tuplas de la
-# función anterior y retorna una lista de tuplas (clave, valor). Esta función
-# realiza el preprocesamiento de las líneas de texto,
-#
 def line_preprocessing(sequence):
-    """Line Preprocessing"""
+    """
+    Preprocesa líneas separando palabras y devolviendo tuplas (archivo, palabra).
+    """
+    result = []
+    for filename, line in sequence:
+        words = line.strip().split()
+        for word in words:
+            cleaned = word.strip('.,:;!?()[]{}"\'').lower()
+            if cleaned:
+                result.append((filename, cleaned))
+    return result
 
 
-#
-# Escriba una función llamada maper que recibe una lista de tuplas de la
-# función anterior y retorna una lista de tuplas (clave, valor). En este caso,
-# la clave es cada palabra y el valor es 1, puesto que se está realizando un
-# conteo.
-#
-#   [
-#     ('Analytics', 1),
-#     ('is', 1),
-#     ...
-#   ]
-#
 def mapper(sequence):
-    """Mapper"""
+    """
+    Convierte (archivo, palabra) en (palabra, 1) para contar.
+    """
+    return [(word, 1) for _, word in sequence]
 
 
-#
-# Escriba la función shuffle_and_sort que recibe la lista de tuplas entregada
-# por el mapper, y retorna una lista con el mismo contenido ordenado por la
-# clave.
-#
-#   [
-#     ('Analytics', 1),
-#     ('Analytics', 1),
-#     ...
-#   ]
-#
 def shuffle_and_sort(sequence):
-    """Shuffle and Sort"""
+    """
+    Ordena por palabra clave para agrupar fácilmente.
+    """
+    return sorted(sequence, key=lambda x: x[0])
 
 
-#
-# Escriba la función reducer, la cual recibe el resultado de shuffle_and_sort y
-# reduce los valores asociados a cada clave sumandolos. Como resultado, por
-# ejemplo, la reducción indica cuantas veces aparece la palabra analytics en el
-# texto.
-#
 def reducer(sequence):
-    """Reducer"""
+    """
+    Reduce la lista ordenada sumando valores por clave (palabra).
+    """
+    result = []
+    for key, group in groupby(sequence, key=lambda x: x[0]):
+        total = sum(value for _, value in group)
+        result.append((key, total))
+    return result
 
 
-#
-# Escriba la función create_ouptput_directory que recibe un nombre de
-# directorio y lo crea. Si el directorio existe, lo borra
-#
 def create_ouptput_directory(output_directory):
-    """Create Output Directory"""
+    """
+    Crea el directorio de salida, eliminando si ya existe.
+    """
+    if os.path.exists(output_directory):
+        shutil.rmtree(output_directory)
+    os.makedirs(output_directory)
 
 
-#
-# Escriba la función save_output, la cual almacena en un archivo de texto
-# llamado part-00000 el resultado del reducer. El archivo debe ser guardado en
-# el directorio entregado como parámetro, y que se creo en el paso anterior.
-# Adicionalmente, el archivo debe contener una tupla por línea, donde el primer
-# elemento es la clave y el segundo el valor. Los elementos de la tupla están
-# separados por un tabulador.
-#
 def save_output(output_directory, sequence):
-    """Save Output"""
+    """
+    Guarda el resultado del reducer en un archivo llamado part-00000,
+    con formato: palabra \t cantidad.
+    """
+    filepath = os.path.join(output_directory, "part-00000")
+    with open(filepath, "w", encoding="utf-8") as file:
+        for key, value in sequence:
+            file.write(f"{key}\t{value}\n")
 
 
-#
-# La siguiente función crea un archivo llamado _SUCCESS en el directorio
-# entregado como parámetro.
-#
 def create_marker(output_directory):
-    """Create Marker"""
+    """
+    Crea el archivo _SUCCESS en el directorio de salida.
+    """
+    open(os.path.join(output_directory, "_SUCCESS"), "w").close()
 
 
-#
-# Escriba la función job, la cual orquesta las funciones anteriores.
-#
 def run_job(input_directory, output_directory):
-    """Job"""
+    """
+    Ejecuta todas las funciones en orden lógico.
+    """
+    create_ouptput_directory(output_directory)
+    data = load_input(input_directory)
+    processed = line_preprocessing(data)
+    mapped = mapper(processed)
+    sorted_data = shuffle_and_sort(mapped)
+    reduced = reducer(sorted_data)
+    save_output(output_directory, reduced)
+    create_marker(output_directory)
 
 
 if __name__ == "__main__":
