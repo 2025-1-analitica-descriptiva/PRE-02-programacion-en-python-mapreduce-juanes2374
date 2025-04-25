@@ -144,7 +144,6 @@ def create_ouptput_directory(output_directory):
     os.makedirs(output_directory)
 
 
-
 #
 # Escriba la función save_output, la cual almacena en un archivo de texto
 # llamado part-00000 el resultado del reducer. El archivo debe ser guardado en
@@ -159,7 +158,6 @@ def save_output(output_directory, sequence):
     with open(f"{output_directory}/part-00000", "w", encoding="utf-8") as f:
         for key, value in sequence:
             f.write(f"{key}\t{value}\n")
-
 
 #
 # La siguiente función crea un archivo llamado _SUCCESS en el directorio
@@ -184,7 +182,6 @@ def run_job(input_directory, output_directory):
     create_marker(output_directory)
 
     pprint(sequence[:5])
-
 
 if __name__ == "__main__":
 
