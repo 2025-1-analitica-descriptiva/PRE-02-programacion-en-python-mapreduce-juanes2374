@@ -5,10 +5,9 @@
 import fileinput
 import glob
 import os.path
-import string
 import time
+import string
 from itertools import groupby
-from pprint import pprint
 
 
 #
@@ -19,6 +18,8 @@ from pprint import pprint
 # original se llama text0.txt, el archivo generado se llamará text0_1.txt,
 # text0_2.txt, etc.
 #
+
+
 def copy_raw_files_to_input_folder(n):
     """Funcion copy_files"""
 
@@ -66,7 +67,6 @@ def load_input(input_directory):
             sequence.append((fileinput.filename(), line))
     return sequence
 
-
 #
 # Escriba la función line_preprocessing que recibe una lista de tuplas de la
 # función anterior y retorna una lista de tuplas (clave, valor). Esta función
@@ -98,10 +98,6 @@ def mapper(sequence):
     return [(word, 1) for _, value in sequence for word in value.split()]
 
 
-
-
-
-
 #
 # Escriba la función shuffle_and_sort que recibe la lista de tuplas entregada
 # por el mapper, y retorna una lista con el mismo contenido ordenado por la
@@ -116,6 +112,8 @@ def mapper(sequence):
 def shuffle_and_sort(sequence):
     """Shuffle and Sort"""
     return sorted(sequence, key=lambda x: x[0])
+
+
 #
 # Escriba la función reducer, la cual recibe el resultado de shuffle_and_sort y
 # reduce los valores asociados a cada clave sumandolos. Como resultado, por
@@ -152,12 +150,12 @@ def create_ouptput_directory(output_directory):
 # elemento es la clave y el segundo el valor. Los elementos de la tupla están
 # separados por un tabulador.
 #
-
 def save_output(output_directory, sequence):
     """Save Output"""
     with open(f"{output_directory}/part-00000", "w", encoding="utf-8") as f:
         for key, value in sequence:
             f.write(f"{key}\t{value}\n")
+
 
 #
 # La siguiente función crea un archivo llamado _SUCCESS en el directorio
@@ -165,23 +163,23 @@ def save_output(output_directory, sequence):
 #
 def create_marker(output_directory):
     """Create Marker"""
-
+    with open(f"{output_directory}/_SUCCESS", "w", encoding="utf-8") as f:
+        f.write("")
 
 #
 # Escriba la función job, la cual orquesta las funciones anteriores.
+#
 def run_job(input_directory, output_directory):
     """Job"""
-
     sequence = load_input(input_directory)
     sequence = line_preprocessing(sequence)
     sequence = mapper(sequence)
-    sequence= shuffle_and_sort(sequence)
-    sequence= reducer(sequence)
+    sequence = shuffle_and_sort(sequence)
+    sequence = reducer(sequence)
     create_ouptput_directory(output_directory)
-    save_output(output_directory,sequence)
+    save_output(output_directory, sequence)
     create_marker(output_directory)
 
-    pprint(sequence[:5])
 
 if __name__ == "__main__":
 
